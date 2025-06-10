@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: blog_gin_api
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config
+    environment:
+      - TZ=Asia/Shanghai
+    networks:
+      - blog_network
+
+networks:
+  blog_network:
+    driver: bridge 
