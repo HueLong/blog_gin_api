@@ -1,19 +1,17 @@
 # 构建阶段
-FROM golang:1.20-alpine AS builder
+FROM golang:1.20 AS builder
 
 # 设置工作目录
 WORKDIR /app
 
-# 使用阿里云镜像源
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-
-# 安装必要的系统依赖（只安装编译必需的最小依赖）
-RUN apk add --no-cache gcc musl-dev
-
 # 设置 GOPROXY 使用国内代理
 ENV GOPROXY=https://goproxy.cn,direct
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+ENV GOARCH=amd64
 
-# 复制 go.mod 和 go.sum
+# 首先只复制依赖文件
 COPY go.mod go.sum ./
 
 # 下载依赖
@@ -22,20 +20,15 @@ RUN go mod download
 # 复制源代码
 COPY . .
 
-# 构建应用
-RUN CGO_ENABLED=0 GOOS=linux go build -o blog_gin_api ./cmd/api
+# 构建应用（使用单核编译，减少 CPU 使用率）
+RUN go build -ldflags="-s -w" -trimpath -o blog_gin_api ./cmd/api
 
 # 运行阶段
-FROM alpine:latest
-
-# 使用阿里云镜像源
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-
-# 安装必要的系统依赖
-RUN apk add --no-cache ca-certificates tzdata
+FROM debian:bullseye-slim
 
 # 设置时区
 ENV TZ=Asia/Shanghai
+RUN apt-get update && apt-get install -y ca-certificates tzdata && rm -rf /var/lib/apt/lists/*
 
 # 设置工作目录
 WORKDIR /app
