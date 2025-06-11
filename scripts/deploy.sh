@@ -64,8 +64,10 @@ echo -e "${GREEN}开始部署...${NC}"
 # 获取当前代码的 commit hash
 OLD_HASH=$(git rev-parse HEAD)
 
-# 拉取最新代码
-echo -e "${GREEN}拉取最新代码...${NC}"
+# 强制重置本地修改并拉取最新代码
+echo -e "${GREEN}强制更新代码...${NC}"
+git reset --hard
+git clean -fd
 git pull origin main
 
 # 获取更新后的 commit hash
