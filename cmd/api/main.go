@@ -1,9 +1,9 @@
 package main
 
 import (
-	"blog_gin_api/internal/middleware"
 	"blog_gin_api/internal/pkg/config"
 	"blog_gin_api/internal/pkg/logger"
+	"blog_gin_api/internal/router"
 	"context"
 	"fmt"
 	"net/http"
@@ -30,16 +30,8 @@ func main() {
 	// 设置运行模式
 	gin.SetMode(config.GlobalConfig.Server.Mode)
 
-	// 创建 Gin 引擎
-	r := gin.New()
-
-	// 使用中间件
-	r.Use(middleware.Logger())
-	r.Use(middleware.Recovery())
-	r.Use(middleware.CORS())
-
-	// 注册路由
-	registerRoutes(r)
+	// 设置路由
+	r := router.SetupRouter()
 
 	// 创建 HTTP 服务器
 	srv := &http.Server{
@@ -71,24 +63,4 @@ func main() {
 	}
 
 	logger.Info("server exiting")
-}
-
-func registerRoutes(r *gin.Engine) {
-	// 健康检查
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	// API 版本分组
-	v1 := r.Group("/api/v1")
-	{
-		// TODO: 添加更多路由
-		v1.GET("/", func(c *gin.Context) {
-			c.JSON(200, gin.H{
-				"message": "Welcome to Blog API v1",
-			})
-		})
-	}
 } 
